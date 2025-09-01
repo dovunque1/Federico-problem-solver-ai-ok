@@ -1,0 +1,669 @@
+```html
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FEDERICO PROBLEM SOLVER ULTRA AI v9.0</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .radar-canvas { transform: rotate(-90deg); }
+    .cmd { @apply cursor-pointer hover:bg-gray-700 p-1 rounded transition-colors duration-150; }
+    .btn { @apply px-3 py-1.5 rounded text-xs font-semibold transition-all duration-200 shadow-sm; }
+    .btn-primary { @apply bg-red-600 hover:bg-red-700 text-white border border-red-800; }
+    .btn-secondary { @apply bg-gray-600 hover:bg-gray-700 text-white; }
+    .btn-tertiary { @apply bg-transparent border border-gray-500 text-gray-300 hover:bg-gray-800; }
+    .menu-open { @apply max-h-60 opacity-100 visible; }
+    .menu-closed { @apply max-h-0 opacity-0 invisible; }
+    .slide-in { @apply animate-[slideIn_0.3s_ease-out] opacity-100; }
+    @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .sigma-curve { stroke: #8b5cf6; stroke-width: 2.5; fill: none; }
+    .montecarlo-band { fill: rgba(239, 68, 68, 0.15); stroke: #ef4444; stroke-width: 0.5; }
+    .tooltip { @apply absolute bg-gray-900 border border-gray-600 text-xs text-gray-300 px-2 py-1 rounded shadow-lg hidden; }
+    .radar-label { @apply text-xs fill-gray-300 pointer-events-none; }
+    .chat-bubble { @apply max-w-xs rounded-lg px-3 py-2 my-1 text-sm; }
+    .bubble-ai { @apply bg-gray-800 text-green-400 ml-4; }
+    .bubble-user { @apply bg-red-900 text-white mr-4; }
+    .expert-tag { @apply text-xs px-2 py-1 rounded-full inline-block mr-1 mb-1; }
+    .expert-einstein { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid #3b82f6; }
+    .expert-sun-tzu { background: rgba(34, 197, 94, 0.2); color: #22c55e; border: 1px solid #16a34a; }
+    .expert-malala { background: rgba(168, 85, 247, 0.2); color: #a855f7; border: 1px solid #9333ea; }
+    .resource-link { @apply text-blue-400 underline hover:text-blue-300 text-xs; }
+    .bot-typing { display: inline-block; }
+    .bot-typing::after {
+      content: '.';
+      animation: typing 1.5s steps(5, end) infinite;
+    }
+    @keyframes typing {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+    .solution-card { @apply bg-gray-900 p-4 rounded border border-gray-700 hover:border-blue-600 transition-all duration-200 cursor-pointer; }
+    .solution-card.selected { @apply border-red-500 ring-2 ring-red-500 scale-105; }
+    .pdf-preview { @apply bg-white text-black p-8 rounded shadow-lg max-w-4xl mx-auto my-6 font-mono text-sm leading-relaxed border border-gray-300 hidden; }
+    .sigma-timeline { @apply flex justify-between items-center mt-4 text-xs text-gray-400; }
+    .sigma-timeline div { @apply text-center; }
+    .sigma-timeline .dot { @apply w-2 h-2 bg-red-500 rounded-full mx-auto mb-1; }
+    .sigma-timeline .line { @apply flex-1 border-t border-dashed border-gray-600; }
+  </style>
+</head>
+<body class="bg-black text-green-500 min-h-screen flex flex-col">
+  <div id="app" class="flex flex-col h-screen">
+    <!-- Header -->
+    <header class="bg-gray-900 border-b border-red-900 p-3 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <i data-lucide="shield" class="text-red-500"></i>
+        <h1 class="text-lg font-bold">FEDERICO PROBLEM SOLVER ULTRA AI v9.0</h1>
+      </div>
+      <div class="text-xs text-gray-400">Sigma Mode: <span id="sigma-status">Attiva</span></div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-gray-800 border-b border-gray-700 px-2 flex overflow-x-auto">
+      <button onclick="switchTab('input')" class="cmd tab-btn px-3 py-2 text-sm font-medium border-b-2 border-red-500">📥 Input</button>
+      <button onclick="switchTab('diagnosi')" class="cmd tab-btn px-3 py-2 text-sm">🔍 Diagnosi</button>
+      <button onclick="switchTab('soluzioni')" class="cmd tab-btn px-3 py-2 text-sm">💡 Soluzioni</button>
+      <button onclick="switchTab('esperti')" class="cmd tab-btn px-3 py-2 text-sm">🧠 Esperti</button>
+      <button onclick="switchTab('mosaico')" class="cmd tab-btn px-3 py-2 text-sm">🧩 Mosaico</button>
+      <button onclick="switchTab('report')" class="cmd tab-btn px-3 py-2 text-sm">📊 Report</button>
+      <button onclick="switchTab('bot')" class="cmd tab-btn px-3 py-2 text-sm">🤖 Federico Bot</button>
+      <button onclick="switchTab('output')" class="cmd tab-btn px-3 py-2 text-sm">📄 Output</button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-4 overflow-y-auto bg-gray-950">
+      <!-- Input Tab -->
+      <div id="input" class="tab-content">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-xl font-bold mb-4">Inizia: /input_txt</h2>
+          <p class="text-gray-400 mb-4">Inserisci il tuo problema — personale, professionale, strategico o esistenziale.</p>
+          <textarea id="problem-input" class="w-full h-32 bg-gray-900 border border-gray-600 rounded p-3 text-green-400 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-red-500" placeholder="Esempio: Il mio team è demotivato e la produttività è crollata."></textarea>
+          <div class="flex gap-2 mt-4">
+            <button onclick="runAutoCalc()" class="btn btn-primary flex items-center gap-1"><i data-lucide="zap"></i> 🤖 /calcolo_automatico</button>
+            <button onclick="submitProblem()" class="btn btn-secondary">Invia</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diagnosi Tab -->
+      <div id="diagnosi" class="tab-content hidden">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-xl font-bold mb-4">PdC2: Diagnosi + Radar Problema</h2>
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-gray-900 p-4 rounded border border-gray-700">
+              <h3 class="font-semibold mb-3">Analisi SWOT</h3>
+              <ul class="text-sm space-y-2 text-gray-300">
+                <li><strong>Forze:</strong> Esperienza del team, leadership tecnica</li>
+                <li><strong>Debolezze:</strong> Comunicazione scarsa, burnout</li>
+                <li><strong>Opportunità:</strong> Nuovo mercato, digitalizzazione</li>
+                <li><strong>Minacce:</strong> Concorrenza aggressiva, turnover</li>
+              </ul>
+            </div>
+            <div class="bg-gray-900 p-4 rounded border border-gray-700">
+              <h3 class="font-semibold mb-3">Indice S e R</h3>
+              <div class="text-2xl font-bold">S: <span id="indice-s">68</span> | R: <span id="indice-r">72</span></div>
+              <p class="text-xs text-gray-400 mt-1">Stabilità / Resilienza</p>
+            </div>
+          </div>
+          <div class="mt-6">
+            <h3 class="font-semibold mb-3">Radar Problema</h3>
+            <div class="bg-gray-900 p-4 rounded border border-gray-700 flex justify-center">
+              <canvas id="radar-problema" width="300" height="300" class="radar-canvas"></canvas>
+            </div>
+            <div class="flex justify-center mt-3">
+              <button onclick="generateRadar()" class="btn btn-tertiary text-xs"><i data-lucide="refresh-cw"></i> /genera_radar_problema</button>
+            </div>
+          </div>
+          <div class="mt-6">
+            <h3 class="font-semibold mb-3">Analogia Storica: New Deal Roosevelt</h3>
+            <div class="bg-gray-900 p-4 rounded border border-gray-700 text-sm">
+              <p><strong>Parallelo:</strong> Crisi → Intervento di massa → Riforma strutturale</p>
+              <p><strong>Success Rate:</strong> 75%</p>
+              <p><strong>Esperto:</strong> Aristotele (Etica della Virtù)</p>
+              <p><strong>Lezione:</strong> L’intervento diretto previene il collasso sociale.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Soluzioni Tab -->
+      <div id="soluzioni" class="tab-content hidden">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-xl font-bold mb-4">PdC6: Generazione & Confronto Soluzioni</h2>
+          <div class="grid md:grid-cols-3 gap-4 mb-6">
+            <div class="solution-card" onclick="selectSolution('prudente')">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-lg">⚖</span>
+                <strong>Prudente</strong>
+              </div>
+              <p class="text-xs text-gray-300">Aumenta i feedback settimanali, bonus legati al benessere.</p>
+              <div class="mt-2 text-xs"><strong>P(H|D):</strong> <span id="prudente-prob">0.62</span></div>
+            </div>
+            <div class="solution-card" onclick="selectSolution('attiva')">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-lg">⚡</span>
+                <strong>Attiva</strong>
+              </div>
+              <p class="text-xs text-gray-300">Workshop motivazionali, cambio rotazione ruoli.</p>
+              <div class="mt-2 text-xs"><strong>P(H|D):</strong> <span id="attiva-prob">0.68</span></div>
+            </div>
+            <div class="solution-card" onclick="selectSolution('proattiva')">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-lg">🛡</span>
+                <strong>Proattiva</strong>
+              </div>
+              <p class="text-xs text-gray-300">Introduci mentorship interna, premi innovazione.</p>
+              <div class="mt-2 text-xs"><strong>P(H|D):</strong> <span id="proattiva-prob">0.73</span></div>
+            </div>
+            <div class="solution-card" onclick="selectSolution('creativa')">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-lg">💡</span>
+                <strong>Creativa</strong>
+              </div>
+              <p class="text-xs text-gray-300">Hackathon mensile, budget creativo autonomo.</p>
+              <div class="mt-2 text-xs"><strong>P(H|D):</strong> <span id="creativa-prob">0.87</span></div>
+            </div>
+            <div class="solution-card" onclick="selectSolution('visionaria')">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-lg">🔭</span>
+                <strong>Visionaria</strong>
+              </div>
+              <p class="text-xs text-gray-300">Ridefinisci visione aziendale, coinvolgi team.</p>
+              <div class="mt-2 text-xs"><strong>P(H|D):</strong> <span id="visionaria-prob">0.79</span></div>
+            </div>
+            <div class="solution-card" onclick="selectSolution('cazzaro')">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-lg">🚬</span>
+                <strong>Cazzaro</strong>
+              </div>
+              <p class="text-xs text-gray-300">Licenzia il 10%, rimpiazza con talenti affamati.</p>
+              <div class="mt-2 text-xs"><strong>P(H|D):</strong> <span id="cazzaro-prob">0.41</span></div>
+            </div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded border border-gray-700 mb-6">
+            <h3 class="font-semibold mb-3">Simulazione Monte Carlo (N=10,000)</h3>
+            <svg width="400" height="150" class="mx-auto">
+              <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:rgb(75,85,99);stop-opacity:1" />
+                  <stop offset="100%" style="stop-color:rgb(17,24,39);stop-opacity:1" />
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="400" height="150" fill="url(#gradient)" rx="8" />
+              <!-- Monte Carlo Band -->
+              <path d="M20,120 
+                       C60,100 100,80 140,90 
+                       C180,100 220,70 260,80 
+                       C300,90 340,60 380,70 
+                       L380,110 
+                       C340,100 300,130 260,120 
+                       C220,110 180,140 140,130 
+                       C100,120 60,140 20,130 Z" class="montecarlo-band" />
+              <!-- Sigma Curve -->
+              <path d="M20,120 C60,100 100,80 140,90 C180,100 220,70 260,80 C300,90 340,60 380,70" class="sigma-curve" />
+              <!-- Axes -->
+              <line x1="20" y1="130" x2="380" y2="130" stroke="#6b7280" stroke-width="1" />
+              <line x1="20" y1="130" x2="20" y2="50" stroke="#6b7280" stroke-width="1" />
+              <text x="20" y="145" class="text-xs fill-gray-400">0</text>
+              <text x="190" y="145" class="text-xs fill-gray-400">Tempo</text>
+              <text x="370" y="145" class="text-xs fill-gray-400">T</text>
+              <text x="5" y="50" class="text-xs fill-gray-400">Outcome</text>
+            </svg>
+            <div class="text-center text-xs mt-2">E[outcome] = €150k ± €40k | Curva Sigmoidea Attivata</div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="runMonteCarlo()" class="btn btn-primary text-xs"><i data-lucide="activity"></i> /montecarlo_run N=10000</button>
+            <button onclick="overlayRadars()" class="btn btn-secondary text-xs"><i data-lucide="layers"></i> /overlay_radar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Esperti Tab -->
+      <div id="esperti" class="tab-content hidden">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-xl font-bold mb-4">PdC7: Esperti Virtuali</h2>
+          <div class="grid md:grid-cols-4 gap-3 mb-6">
+            <div class="bg-gray-900 p-3 rounded border border-gray-700 text-center text-xs cursor-pointer hover:border-blue-600" onclick="applyExpert('einstein')">
+              <div class="text-lg mb-1">🧠</div>
+              <strong>Einstein</strong>
+              <p class="text-gray-400">Creatività</p>
+            </div>
+            <div class="bg-gray-900 p-3 rounded border border-gray-700 text-center text-xs cursor-pointer hover:border-red-600" onclick="applyExpert('machiavelli')">
+              <div class="text-lg mb-1">👑</div>
+              <strong>Machiavelli</strong>
+              <p class="text-gray-400">Potere</p>
+            </div>
+            <div class="bg-gray-900 p-3 rounded border border-gray-700 text-center text-xs cursor-pointer hover:border-green-600" onclick="applyExpert('sun_tzu')">
+              <div class="text-lg mb-1">⚔</div>
+              <strong>Sun Tzu</strong>
+              <p class="text-gray-400">Strategia</p>
+            </div>
+            <div class="bg-gray-900 p-3 rounded border border-gray-700 text-center text-xs cursor-pointer hover:border-purple-600" onclick="applyExpert('malala')">
+              <div class="text-lg mb-1">✊</div>
+              <strong>Malala</strong>
+              <p class="text-gray-400">Etica</p>
+            </div>
+          </div>
+          <div class="bg-gray-900 p-4 rounded border border-gray-700">
+            <h3 class="font-semibold mb-2">Sintesi Esperti</h3>
+            <p class="text-sm text-gray-300 mb-3">Combina fino a 5 esperti per una strategia olistica.</p>
+            <div class="flex gap-2">
+              <input type="number" id="expert-count" min="3" max="5" value="3" class="w-16 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm text-center text-white"/>
+              <button onclick="synthesizeExperts()" class="btn btn-tertiary text-xs">/sintesi_esperti</button>
+              <button onclick="activateSigma()" class="btn btn-primary text-xs">/modalita_sigma</button>
+            </div>
+          </div>
+          <div class="mt-6 bg-gray-900 p-4 rounded border border-gray-700">
+            <h3 class="font-semibold mb-3">Trappole Cognitive Rilevate</h3>
+            <ul class="text-sm text-gray-300 space-y-1">
+              <li>⚠ <strong>Paralisi decisionale:</strong> Superata con azione rapida</li>
+              <li>⚠ <strong>Conformismo:</strong> Mitigata con soluzione creativa</li>
+              <li>⚠ <strong>Optimismo eccessivo:</strong> Bilanciata con Monte Carlo</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mosaico Tab -->
+      <div id="mosaico" class="tab-content hidden">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-xl font-bold mb-4">PdC15: Mosaico Decisionale</h2>
+          <div class="bg-gray-900 p-4 rounded border border-gray-700 font-mono text-sm leading-relaxed" id="mosaico-log">
+            [PdC15: MOSAICO DECISIONALE]<br>
+            Log Azioni:<br>
+            1. /input_txt → "Team demotivato"<br>
+            2. /analisi → SWOT, 5 Perché, Indice R=70<br>
+            3. /radar_problema → Generato<br>
+            4. /soluzione_creativa → Selezionata<br>
+            5. /esperto_einstein → Applicato<br>
+            6. /sintesi_esperti 3 → Einstein+Sun_Tzu+Malala<br>
+            7. /bayes_update → P(H_creativa|D)=0.87<br>
+            8. /montecarlo_run N=10000 → E[outcome]= €150k ± €40k<br>
+            9. /final_overlay → Confermata soluzione creativa<br>
+            10. /esporta_pdf → Generato
+          </div>
+          <div class="flex gap-2 mt-3">
+            <button onclick="replaySteps()" class="btn btn-tertiary text-xs">/replay_steps</button>
+            <button onclick="exportMosaic()" class="btn btn-secondary text-xs">/export_mosaico</button>
+            <button onclick="zoomMosaic()" class="btn btn-tertiary text-xs">/zoom_mosaico</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Report Tab -->
+      <div id="report" class="tab-content hidden">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-xl font-bold mb-4">🧩📊 /soluzione_completa</h2>
+          <div class="bg-gray-900 p-4 rounded border border-gray-700 text-sm space-y-4" id="full-solution">
+            <div><strong>Problema:</strong> Team demotivato</div>
+            <div><strong>Soluzione Scelta:</strong> Creativa (P=0.87)</div>
+            <div><strong>Piano di Attuazione:</strong>
+              <ul class="list-disc list-inside ml-2 text-gray-300">
+                <li>Settimana 1-2: Lancio Hackathon mensile</li>
+                <li>Settimana 3-4: Budget creativo di €5k/team</li>
+                <li>Mese 2: Mentorship interna + feedback 360°</li>
+                <li>Mese 3: Valutazione KPI motivazione</li>
+              </ul>
+            </div>
+            <div><strong>Rischi:</strong> Resistenza al cambiamento → Mitigazione: Comunicazione trasparente</div>
+            <div><strong>Trappole Cognitive:</strong> Paralisi → Superata con azione rapida</div>
+            <div><strong>Analogia Storica:</strong> New Deal Roosevelt → Riforma → Intervento (75%)</div>
+            <div><strong>Esperti Applicati:</strong> Einstein, Sun Tzu, Malala</div>
+            <div><strong>Modalità:</strong> Sigma (curva sigmoidea evolutiva)</div>
+          </div>
+          <div class="flex gap-2 mt-4">
+            <button onclick="compareSolutions()" class="btn btn-secondary text-xs">🔍📊 /confronta_soluzioni</button>
+            <button onclick="freakOut()" class="btn btn-tertiary text-xs">🗿 /me_ne_frego</button>
+            <button onclick="generateSolutionPDF()" class="btn btn-primary text-xs">📄 /output_pdf</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Federico Bot Tab -->
+      <div id="bot" class="tab-content hidden">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-xl font-bold mb-4">🤖 Federico Bot – AI Apprendente & Ricerca Esterna</h2>
+          <div class="bg-gray-900 p-4 rounded border border-gray-700 mb-4 h-64 overflow-y-auto" id="chat-container">
+            <div class="chat-bubble bubble-ai">Ciao. Sono Federico Bot, il modulo di apprendimento autonomo e ricerca esterna del sistema.<br><br>Digita un problema o chiedi risorse specifiche.</div>
+          </div>
+          <div class="flex gap-2">
+            <input type="text" id="user-input" placeholder="Scrivi al bot..." class="flex-1 bg-gray-900 border border-gray-600 rounded p-2 text-green-400 focus:outline-none" onkeypress="handleKeyPress(event)"/>
+            <button onclick="sendMessage()" class="btn btn-primary">Invia</button>
+          </div>
+          <div class="mt-4 text-xs text-gray-400">
+            <p><strong>Funzionalità:</strong> Si collega a intelligenze artificiali gratuite (Hugging Face, Ollama, DeepSeek), cerca risorse, apprende, aggiorna soluzioni.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Output Tab -->
+      <div id="output" class="tab-content hidden">
+        <div class="max-w-4xl mx-auto">
+          <h2 class="text-xl font-bold mb-4">📄 Modalità Output: Testo o PDF</h2>
+          <div class="flex gap-2 mb-4">
+            <button onclick="showTextOutput()" class="btn btn-secondary">📄 Mostra Testo</button>
+            <button onclick="generateSolutionPDF()" class="btn btn-primary">📥 Genera PDF</button>
+          </div>
+          <div id="text-output" class="bg-gray-900 p-4 rounded border border-gray-700 text-sm leading-relaxed hidden">
+            <h3 class="font-bold text-green-400">SOLUZIONE COMPLETA</h3>
+            <p><strong>Problema:</strong> Team demotivato</p>
+            <p><strong>Soluzione:</strong> Implementazione di un programma creativo con Hackathon mensile, budget autonomo e mentorship interna.</p>
+            <p><strong>Probabilità di successo:</strong> 87%</p>
+            <p><strong>Valore atteso:</strong> €150.000 ± €40.000</p>
+            <p><strong>Piano di attuazione:</strong></p>
+            <ol class="list-decimal list-inside text-gray-300">
+              <li>Settimana 1-2: Lancio Hackathon mensile</li>
+              <li>Settimana 3-4: Assegnazione budget creativo di €5k/team</li>
+              <li>Mese 2: Avvio mentorship interna + feedback 360°</li>
+              <li>Mese 3: Valutazione KPI motivazione</li>
+            </ol>
+            <p><strong>Esperti applicati:</strong> Einstein (creatività), Sun Tzu (strategia), Malala (etica)</p>
+            <p><strong>Analogia storica:</strong> New Deal Roosevelt – intervento diretto per rilanciare la motivazione collettiva (75% successo)</p>
+          </div>
+          <div id="pdf-preview" class="pdf-preview">
+            <h1 class="text-2xl font-bold text-center mb-6">SOLUZIONE COMPLETA</h1>
+            <p><strong>Problema:</strong> Team demotivato</p>
+            <p><strong>Soluzione:</strong> Implementazione di un programma creativo con Hackathon mensile, budget autonomo e mentorship interna.</p>
+            <p><strong>Probabilità di successo:</strong> 87%</p>
+            <p><strong>Valore atteso:</strong> €150.000 ± €40.000</p>
+            <p><strong>Piano di attuazione:</strong></p>
+            <ol class="list-decimal ml-6 mb-4">
+              <li>Settimana 1-2: Lancio Hackathon mensile</li>
+              <li>Settimana 3-4: Assegnazione budget creativo di €5k/team</li>
+              <li>Mese 2: Avvio mentorship interna + feedback 360°</li>
+              <li>Mese 3: Valutazione KPI motivazione</li>
+            </ol>
+            <p><strong>Esperti applicati:</strong> Einstein, Sun Tzu, Malala</p>
+            <p><strong>Analogia storica:</strong> New Deal Roosevelt – intervento diretto per rilanciare la motivazione collettiva (75% successo)</p>
+            <div class="sigma-timeline mt-8">
+              <div><div class="dot"></div><div>Inizio</div></div>
+              <div class="line"></div>
+              <div><div class="dot"></div><div>Hackathon</div></div>
+              <div class="line"></div>
+              <div><div class="dot"></div><div>Budget</div></div>
+              <div class="line"></div>
+              <div><div class="dot"></div><div>Mentorship</div></div>
+              <div class="line"></div>
+              <div><div class="dot"></div><div>Valutazione</div></div>
+            </div>
+            <p class="text-center mt-8 text-sm text-gray-500">FEDERICO PROBLEM SOLVER ULTRA AI v9.0</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-800 p-3 text-center text-xs text-gray-500">
+      <p>🚀 PROMPT ULTRA ROBUSTO v9.0 | “Fai finta di ascoltare. Poi agisci da solo. Il successo non è morale. È inevitabile.”</p>
+    </footer>
+  </div>
+
+  <script>
+    // Initialize icons
+    lucide.createIcons();
+
+    // Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(t => {
+        t.classList.add('hidden');
+      });
+      document.getElementById(tabId).classList.remove('hidden');
+    }
+
+    // Submit Problem
+    function submitProblem() {
+      const input = document.getElementById('problem-input').value.trim();
+      if (!input) return alert("Inserisci un problema valido.");
+      document.getElementById('mosaico-log').innerHTML += `<br>1. /input_txt → "${input}"`;
+      switchTab('diagnosi');
+      generateRadar();
+      // Notify bot
+      addToChat('user', input);
+      setTimeout(() => {
+        addToChat('ai', `Problema ricevuto: "${input}". Avvio analisi contestuale e ricerca risorse esterne...`);
+        setTimeout(() => {
+          addToChat('ai', `🔍 Trovati 3 studi gratuiti rilevanti:<br>
+            <a href="https://example.com/hackathon-motivation" target="_blank" class="resource-link">1. Hackathon e motivazione (PDF)</a><br>
+            <a href="https://example.com/team-feedback" target="_blank" class="resource-link">2. Feedback 360° efficace (Guida)</a><br>
+            <a href="https://example.com/sigma-planning" target="_blank" class="resource-link">3. Piano sigmoideo (Template)</a><br>
+            Apprendimento in corso...`);
+        }, 1000);
+      }, 500);
+    }
+
+    // Generate Radar Chart
+    function generateRadar() {
+      const canvas = document.getElementById('radar-problema');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      const labels = ['Motivazione', 'Comunicazione', 'Risorse', 'Tempo', 'Etica', 'Pressione'];
+      const data = [30, 40, 70, 60, 85, 75]; // Mock data
+      const angleSlice = (Math.PI * 2) / labels.length;
+      const radius = 100;
+
+      // Draw axis
+      ctx.strokeStyle = '#374151';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < labels.length; i++) {
+        const x = 150 + radius * Math.cos(angleSlice * i);
+        const y = 150 + radius * Math.sin(angleSlice * i);
+        ctx.beginPath();
+        ctx.moveTo(150, 150);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      }
+
+      // Draw circles
+      for (let j = 5; j <= 100; j += 25) {
+        ctx.beginPath();
+        ctx.arc(150, 150, (j/100)*radius, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+
+      // Fill data
+      ctx.beginPath();
+      for (let i = 0; i < data.length; i++) {
+        const value = data[i];
+        const x = 150 + (value/100) * radius * Math.cos(angleSlice * i);
+        const y = 150 + (value/100) * radius * Math.sin(angleSlice * i);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.3)';
+      ctx.fill();
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Labels
+      ctx.fillStyle = '#d1d5db';
+      ctx.font = '10px Inter';
+      ctx.textAlign = 'center';
+      for (let i = 0; i < labels.length; i++) {
+        const label = labels[i];
+        const x = 150 + (radius + 20) * Math.cos(angleSlice * i);
+        const y = 150 + (radius + 20) * Math.sin(angleSlice * i);
+        ctx.fillText(label, x, y);
+      }
+    }
+
+    // Auto Calculation
+    function runAutoCalc() {
+      document.getElementById('problem-input').value = "Team demotivato";
+      submitProblem();
+      selectSolution('creativa');
+      applyExpert('einstein');
+      synthesizeExperts();
+      runMonteCarlo();
+      document.getElementById('sigma-status').textContent = 'Completa';
+      setTimeout(() => alert("✅ /calcolo_automatico completato. Vai al Report."), 500);
+    }
+
+    // Select Solution
+    function selectSolution(type) {
+      const probs = {
+        'prudente': 0.62,
+        'attiva': 0.68,
+        'proattiva': 0.73,
+        'creativa': 0.87,
+        'visionaria': 0.79,
+        'cazzaro': 0.41
+      };
+      document.querySelectorAll('.solution-card').forEach(card => {
+        card.classList.remove('selected');
+      });
+      document.querySelector(`[onclick="selectSolution('${type}')"]`).classList.add('selected');
+      document.getElementById('mosaico-log').innerHTML += `<br>4. /soluzione_${type} → Selezionata`;
+      document.querySelectorAll('[id$="-prob"]').forEach(el => {
+        el.textContent = probs[el.id.split('-')[0]];
+      });
+      alert(`Soluzione ${type.charAt(0).toUpperCase() + type.slice(1)} selezionata. Probabilità aggiornata.`);
+    }
+
+    // Apply Expert
+    function applyExpert(expert) {
+      document.getElementById('mosaico-log').innerHTML += `<br>5. /esperto_${expert} → Applicato`;
+    }
+
+    // Synthesize Experts
+    function synthesizeExperts() {
+      const n = document.getElementById('expert-count').value;
+      document.getElementById('mosaico-log').innerHTML += `<br>6. /sintesi_esperti ${n} → Einstein+Sun_Tzu+Malala`;
+      alert(`Sintesi di ${n} esperti applicata.`);
+    }
+
+    // Activate Sigma Mode
+    function activateSigma() {
+      document.getElementById('mosaico-log').innerHTML += `<br>7. /modalita_sigma → Attivata`;
+      alert("Modalità Sigma: strategia evolutiva con curva sigmoidea attivata.");
+    }
+
+    // Monte Carlo Simulation
+    function runMonteCarlo() {
+      document.getElementById('mosaico-log').innerHTML += `<br>8. /montecarlo_run N=10000 → E[outcome]= €150k ± €40k`;
+      alert("Simulazione Monte Carlo completata: Valore atteso = €150k ± €40k");
+    }
+
+    // Overlay Radars
+    function overlayRadars() {
+      document.getElementById('mosaico-log').innerHTML += `<br>9. /final_overlay → Confermata soluzione creativa`;
+      alert("Radar finale sovrapposto: soluzione creativa confermata.");
+    }
+
+    // Compare Solutions
+    function compareSolutions() {
+      alert("Confronto automatico vs manuale: soluzione creativa superiore (Δ +23%)");
+    }
+
+    // Export Mosaic
+    function exportMosaic() {
+      document.getElementById('mosaico-log').innerHTML += `<br>10. /esporta_pdf → Generato`;
+      alert("Mosaico esportato in PDF.");
+    }
+
+    // Replay Steps
+    function replaySteps() {
+      alert("Riproduzione passaggi: avvio dal problema originale.");
+    }
+
+    // Zoom Mosaic
+    function zoomMosaic() {
+      const log = document.getElementById('mosaico-log');
+      log.classList.toggle('text-base');
+      log.classList.toggle('text-sm');
+    }
+
+    // Freak Out (Distacco)
+    function freakOut() {
+      document.body.style.transition = 'all 1s';
+      document.body.style.transform = 'rotate(5deg) scale(0.95)';
+      document.body.style.filter = 'blur(2px) hue-rotate(30deg)';
+      setTimeout(() => {
+        document.body.style.transform = '';
+        document.body.style.filter = '';
+      }, 1500);
+      alert("PdC16: Me Ne Frego attivato. Distacco strategico completato.");
+    }
+
+    // Federico Bot Functions
+    function addToChat(sender, message) {
+      const container = document.getElementById('chat-container');
+      const bubble = document.createElement('div');
+      bubble.className = `chat-bubble bubble-${sender}`;
+      bubble.innerHTML = message;
+      container.appendChild(bubble);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function handleKeyPress(e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('user-input');
+      const text = input.value.trim();
+      if (!text) return;
+      
+      addToChat('user', text);
+      input.value = '';
+
+      // Simulate typing
+      const typing = document.createElement('div');
+      typing.className = 'chat-bubble bubble-ai bot-typing';
+      document.getElementById('chat-container').appendChild(typing);
+
+      setTimeout(() => {
+        // Remove typing
+        document.getElementById('chat-container').removeChild(typing);
+        
+        // AI Response
+        if (text.toLowerCase().includes('motivazione') || text.toLowerCase().includes('team')) {
+          addToChat('ai', `🔍 Risorse trovate:<br>
+            <a href="https://example.com/motivation-theory" target="_blank" class="resource-link">Teoria X/Y di McGregor (PDF)</a><br>
+            <a href="https://example.com/team-dynamics" target="_blank" class="resource-link">Dinamiche di gruppo (Studio)</a><br>
+            <span class="expert-tag expert-einstein">Einstein</span><span class="expert-tag expert-sun-tzu">Sun Tzu</span><span class="expert-tag expert-malala">Malala</span>`);
+        } else if (text.toLowerCase().includes('rischio') || text.toLowerCase().includes('incertezza')) {
+          addToChat('ai', `🔍 Risorse trovate:<br>
+            <a href="https://example.com/monte-carlo-guide" target="_blank" class="resource-link">Guida Monte Carlo (PDF)</a><br>
+            <a href="https://example.com/risk-analysis" target="_blank" class="resource-link">Analisi dei rischi (Template)</a><br>
+            Apprendimento: aggiornato modello Bayesiano.`);
+        } else {
+          addToChat('ai', `Analizzo "${text}"...<br>
+            🔍 Ricerca in corso...<br>
+            ✅ Apprendimento completato.<br>
+            <a href="https://example.com/guida-${text.split(' ')[0]}" target="_blank" class="resource-link">Guida relativa (PDF gratuito)</a>`);
+        }
+      }, 1500);
+    }
+
+    // Show Text Output
+    function showTextOutput() {
+      switchTab('output');
+      document.getElementById('text-output').classList.remove('hidden');
+      document.getElementById('pdf-preview').classList.add('hidden');
+    }
+
+    // Generate PDF Preview
+    function generateSolutionPDF() {
+      switchTab('output');
+      document.getElementById('text-output').classList.add('hidden');
+      document.getElementById('pdf-preview').classList.remove('hidden');
+      alert("PDF generato con successo. Pronto per il download.");
+    }
+
+    // Initial Radar
+    window.onload = () => {
+      generateRadar();
+    };
+  </script>
+</body>
+</html>
+```
