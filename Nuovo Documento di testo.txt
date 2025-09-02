@@ -1,0 +1,11 @@
+
+wsl  --install
+
+
+docker run -it --rm --name n8n -p 5678:5678 -v C:\n8n_data:/home/node/.n8n docker.io/n8nio/n8n
+
+
+http://localhost:5678
+
+
+
